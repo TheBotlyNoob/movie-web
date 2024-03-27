@@ -28,6 +28,7 @@ export function PlayerPart(props: PlayerPartProps) {
       />
       <Player.EpisodesRouter onChange={props.onMetaChange} />
       <Player.SettingsRouter />
+      <Player.WatchPartyRouter />
       <Player.SubtitleView controlsShown={showTargets} />
 
       {status === playerStatus.PLAYING ? (
@@ -104,6 +105,7 @@ export function PlayerPart(props: PlayerPartProps) {
             <Player.Episodes />
             {status === playerStatus.PLAYING ? (
               <>
+                <Player.WatchParty />
                 <Player.Pip />
                 <Player.Airplay />
                 <Player.Chromecast />
