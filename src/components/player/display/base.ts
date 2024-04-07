@@ -83,7 +83,8 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
 
   function reportAudioTracks() {
     if (!hls) return;
-    const currentTrack = hls.audioTracks[hls.audioTrack];
+    const currentTrack = hls.audioTracks?.[hls.audioTrack ?? 0];
+    if (!currentTrack) return;
     emit("changedaudiotrack", {
       id: currentTrack.id.toString(),
       label: currentTrack.name,
@@ -129,6 +130,7 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
   }
 
   function setupSource(vid: HTMLVideoElement, src: LoadableSource) {
+    hls = null;
     if (src.type === "hls") {
       if (canPlayHlsNatively(vid)) {
         vid.src = processCdnLink(src.url);
@@ -184,6 +186,21 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
 
               await setDomainRule({
                 ruleId: RULE_IDS.SET_DOMAINS_HLS,
+                targetDomains: chunkUrls,
+                requestHeaders: {
+                  ...src.preferredHeaders,
+                  ...src.headers,
+                },
+              });
+            });
+            hls.on(Hls.Events.AUDIO_TRACK_LOADED, async (_, data) => {
+              const chunkUrlsDomains = data.details.fragments.map(
+                (v) => new URL(v.url).hostname,
+              );
+              const chunkUrls = [...new Set(chunkUrlsDomains)];
+
+              await setDomainRule({
+                ruleId: RULE_IDS.SET_DOMAINS_HLS_AUDIO,
                 targetDomains: chunkUrls,
                 requestHeaders: {
                   ...src.preferredHeaders,
